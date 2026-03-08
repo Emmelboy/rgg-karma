@@ -985,16 +985,32 @@ async function fetchFromGH() {
 
 async function pushToGH() {
   try {
-    // get current SHA
     let sha = null;
     const get = await ghRequest('GET', null);
-    if (get.ok) { const j = await get.json(); sha = j.sha; }
+    if (get.ok) {
+      const j = await get.json();
+      sha = j.sha;
+    } else {
+      const errText = await get.text();
+      setStatus(`GET ${get.status}: ${errText.slice(0,120)}`, 'err');
+      return false;
+    }
 
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA, null, 2))));
     const body = { message: 'Update karma data', content, ...(sha ? { sha } : {}) };
     const put = await ghRequest('PUT', body);
-    return put.ok;
-  } catch { return false; }
+
+    if (!put.ok) {
+      const errJson = await put.json().catch(() => ({}));
+      const msg = errJson.message || put.statusText || String(put.status);
+      setStatus(`PUT ${put.status}: ${msg}`, 'err');
+      return false;
+    }
+    return true;
+  } catch(e) {
+    setStatus(`Исключение: ${e.message}`, 'err');
+    return false;
+  }
 }
 
 function ghRequest(method, body) {
