@@ -1,4 +1,41 @@
 {
-  "hero": "ТУТ ТВОЙ НИК",
-  "streamers": []
+  "hero": "AloeKoala",
+  "streamers": [
+    {
+      "name": "Ailisiq",
+      "karma": -1,
+      "neg": "",
+      "pos": ""
+    },
+    {
+      "name": "Streamer_B",
+      "karma": -3,
+      "neg": "Заблокировал на клетке ивента намеренно",
+      "pos": ""
+    },
+    {
+      "name": "Streamer_C",
+      "karma": 1,
+      "neg": "",
+      "pos": "Иногда подсказывает по играм"
+    },
+    {
+      "name": "Streamer_D",
+      "karma": -1,
+      "neg": "Мелкая стычка из-за предмета",
+      "pos": ""
+    },
+    {
+      "name": "Streamer_E",
+      "karma": 5,
+      "neg": "",
+      "pos": "Лучший союзник, всегда прикрывает"
+    },
+    {
+      "name": "Streamer_F",
+      "karma": 0,
+      "neg": "",
+      "pos": ""
+    }
+  ]
 }
