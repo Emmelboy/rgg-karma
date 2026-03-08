@@ -36,6 +36,18 @@
       "karma": 5,
       "neg": "",
       "pos": "Союзник"
+    },
+    {
+      "name": "Kover_UnderCover",
+      "karma": 0,
+      "neg": "",
+      "pos": ""
+    },
+    {
+      "name": "LaMoonkin",
+      "karma": 0,
+      "neg": "",
+      "pos": ""
     }
   ]
 }
