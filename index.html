@@ -779,20 +779,21 @@ let GH = { user: '', repo: '', file: 'karma.json', token: '' };
   // Load GH settings
   try { GH = JSON.parse(localStorage.getItem('rgg_gh') || 'null') || GH; } catch {}
 
-  // Try to load data from GitHub first, else localStorage
-  if (GH.user && GH.repo && GH.token) {
-    setStatus('Загрузка с GitHub...', 'loading');
-    const remote = await fetchFromGH();
+  // Always try to load karma.json publicly first (works for ALL visitors, no token needed)
+  if (GH.user && GH.repo) {
+    setStatus('Загрузка данных...', 'loading');
+    const remote = await fetchPublic();
     if (remote) {
       DATA = remote;
-      setStatus('Данные загружены с GitHub', 'ok');
-    } else {
-      loadLocal();
+      setStatus('Данные актуальны ✓', 'ok');
+      render();
+      return;
     }
-  } else {
-    loadLocal();
-    setStatus('GitHub не настроен — данные локальные', 'info');
   }
+
+  // Fallback to localStorage (only for owner before GitHub is set up)
+  loadLocal();
+  setStatus(GH.user ? 'Не удалось загрузить с GitHub' : 'GitHub не настроен', 'info');
   render();
 })();
 
@@ -962,6 +963,16 @@ async function saveAll() {
 }
 
 // ── GITHUB API ─────────────────────────────────────────────────────────────
+
+// Public read — работает для ВСЕХ посетителей без токена
+async function fetchPublic() {
+  try {
+    const url = `https://raw.githubusercontent.com/${GH.user}/${GH.repo}/main/${GH.file}?t=${Date.now()}`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
 async function fetchFromGH() {
   try {
     const r = await ghRequest('GET', null);
