@@ -735,6 +735,12 @@ footer {
   </div>
 
   <div class="field">
+    <label class="field-label">Название ветки</label>
+    <input class="field-input" id="gh-branch" placeholder="main">
+    <div class="hint">Обычно main или master. Смотри на GitHub в шапке репозитория.</div>
+  </div>
+
+  <div class="field">
     <label class="field-label">Имя файла данных</label>
     <input class="field-input" id="gh-file" placeholder="karma.json">
     <div class="hint">Этот файл будет создан/перезаписан в корне репозитория.</div>
@@ -772,28 +778,33 @@ const DEFAULTS = {
 };
 
 let DATA = DEFAULTS;
-let GH = { user: '', repo: '', file: 'karma.json', token: '' };
+let GH = { user: '', repo: '', file: 'karma.json', token: '', branch: 'main' };
+
+// ── PUBLIC CONFIG — зашито для всех посетителей ──────────────────────────
+// Друзья читают отсюда без каких-либо настроек
+const PUBLIC_USER   = 'emmelboy';
+const PUBLIC_REPO   = 'rgg-karma';
+const PUBLIC_BRANCH = 'main';
+const PUBLIC_FILE   = 'karma.json';
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 (async function init() {
   // Load GH settings
   try { GH = JSON.parse(localStorage.getItem('rgg_gh') || 'null') || GH; } catch {}
 
-  // Always try to load karma.json publicly first (works for ALL visitors, no token needed)
-  if (GH.user && GH.repo) {
-    setStatus('Загрузка данных...', 'loading');
-    const remote = await fetchPublic();
-    if (remote) {
-      DATA = remote;
-      setStatus('Данные актуальны ✓', 'ok');
-      render();
-      return;
-    }
+  // Always load karma.json publicly — works for ALL visitors without any setup
+  setStatus('Загрузка данных...', 'loading');
+  const remote = await fetchPublic();
+  if (remote) {
+    DATA = remote;
+    setStatus('Данные актуальны ✓', 'ok');
+    render();
+    return;
   }
 
-  // Fallback to localStorage (only for owner before GitHub is set up)
+  // Fallback to localStorage
   loadLocal();
-  setStatus(GH.user ? 'Не удалось загрузить с GitHub' : 'GitHub не настроен', 'info');
+  setStatus('Не удалось загрузить данные', 'info');
   render();
 })();
 
@@ -967,7 +978,11 @@ async function saveAll() {
 // Public read — работает для ВСЕХ посетителей без токена
 async function fetchPublic() {
   try {
-    const url = `https://raw.githubusercontent.com/${GH.user}/${GH.repo}/main/${GH.file}?t=${Date.now()}`;
+    const u    = PUBLIC_USER;
+    const repo = PUBLIC_REPO;
+    const br   = PUBLIC_BRANCH;
+    const file = PUBLIC_FILE;
+    const url  = `https://raw.githubusercontent.com/${u}/${repo}/${br}/${file}?t=${Date.now()}`;
     const r = await fetch(url);
     if (!r.ok) return null;
     return await r.json();
@@ -997,7 +1012,7 @@ async function pushToGH() {
     }
 
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA, null, 2))));
-    const body = { message: 'Update karma data', content, ...(sha ? { sha } : {}) };
+    const body = { message: 'Update karma data', content, branch: GH.branch || 'main', ...(sha ? { sha } : {}) };
     const put = await ghRequest('PUT', body);
 
     if (!put.ok) {
@@ -1014,6 +1029,7 @@ async function pushToGH() {
 }
 
 function ghRequest(method, body) {
+  const branch = GH.branch || 'main';
   const url = `https://api.github.com/repos/${GH.user}/${GH.repo}/contents/${GH.file}`;
   return fetch(url, {
     method,
@@ -1030,6 +1046,7 @@ function ghRequest(method, body) {
 function openGhSettings() {
   document.getElementById('gh-user').value = GH.user;
   document.getElementById('gh-repo').value = GH.repo;
+  document.getElementById('gh-branch').value = GH.branch || 'main';
   document.getElementById('gh-file').value = GH.file;
   document.getElementById('gh-token').value = GH.token;
   document.getElementById('gh-overlay').classList.add('open');
@@ -1040,10 +1057,11 @@ function closeGhSettings() {
 }
 
 function saveGhSettings() {
-  GH.user  = document.getElementById('gh-user').value.trim();
-  GH.repo  = document.getElementById('gh-repo').value.trim();
-  GH.file  = document.getElementById('gh-file').value.trim() || 'karma.json';
-  GH.token = document.getElementById('gh-token').value.trim();
+  GH.user   = document.getElementById('gh-user').value.trim();
+  GH.repo   = document.getElementById('gh-repo').value.trim();
+  GH.branch = document.getElementById('gh-branch').value.trim() || 'main';
+  GH.file   = document.getElementById('gh-file').value.trim() || 'karma.json';
+  GH.token  = document.getElementById('gh-token').value.trim();
   localStorage.setItem('rgg_gh', JSON.stringify(GH));
   closeGhSettings();
   setStatus('Настройки GitHub сохранены', 'ok');
