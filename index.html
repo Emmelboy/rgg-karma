@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RGG · Karma Board</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg:       #0a0c0f;
+  --surface:  #111318;
+  --card:     #161a22;
+  --border:   #1e2530;
+  --border2:  #2a3340;
+  --text:     #c8d0dc;
+  --muted:    #4a5568;
+  --dim:      #2d3748;
+  --red:      #e53e3e;
+  --red-glow: rgba(229,62,62,0.15);
+  --red-dim:  #7b1d1d;
+  --green:    #38a169;
+  --green-glow: rgba(56,161,105,0.15);
+  --green-dim:#1c4f32;
+  --accent:   #4299e1;
+  --accent2:  #63b3ed;
+  --gold:     #d4a017;
+  --mono:     'Share Tech Mono', monospace;
+  --sans:     'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Background texture ─────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(66,153,225,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(56,161,105,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+header {
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid var(--border);
+  padding: 28px 40px 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logo-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.logo-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  line-height: 1;
+}
+
+.logo-title span {
+  color: var(--accent);
+}
+
+.hero-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  padding: 8px 16px;
+  border-radius: 2px;
+}
+
+.hero-chip-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
+
+.hero-chip-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* ── Main ───────────────────────────────────────────────── */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+/* ── Column labels ──────────────────────────────────────── */
+.col-labels {
+  display: grid;
+  grid-template-columns: 1fr 180px 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.label-neg {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--red);
+  text-align: right;
+  opacity: 0.7;
+}
+
+.label-center {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.label-pos {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--green);
+  opacity: 0.7;
+}
+
+/* ── Karma rows ─────────────────────────────────────────── */
+#karma-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.karma-row {
+  display: grid;
+  grid-template-columns: 1fr 180px 1fr;
+  gap: 8px;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  padding: 12px 10px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: default;
+  animation: fadeIn 0.3s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.karma-row.pos { border-left-color: var(--green); }
+.karma-row.neg { border-left-color: var(--red); }
+.karma-row.neu { border-left-color: var(--muted); }
+
+.karma-row:hover { background: #1c2130; border-color: var(--border2); }
+.karma-row.pos:hover { border-left-color: var(--green); }
+.karma-row.neg:hover { border-left-color: var(--red); }
+
+/* bar sides */
+.side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.side.neg { justify-content: flex-end; }
+.side.pos { justify-content: flex-start; }
+
+.bar-wrap {
+  flex: 1;
+  max-width: 130px;
+  height: 8px;
+  background: var(--dim);
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.5s cubic-bezier(0.23,1,0.32,1);
+}
+
+.bar-fill.neg {
+  background: linear-gradient(90deg, var(--red-dim), var(--red));
+  float: right;
+  box-shadow: 0 0 6px rgba(229,62,62,0.6);
+}
+
+.bar-fill.pos {
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  box-shadow: 0 0 6px rgba(56,161,105,0.6);
+}
+
+.bar-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.bar-num.neg { color: var(--red); text-align: right; }
+.bar-num.pos { color: var(--green); }
+
+/* center */
+.row-center {
+  text-align: center;
+  padding: 0 6px;
+}
+
+.row-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-karma-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.row-karma-badge.pos { color: var(--green); }
+.row-karma-badge.neg { color: var(--red); }
+.row-karma-badge.neu { color: var(--muted); }
+
+.row-expand {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: color 0.15s;
+}
+
+.row-expand:hover { color: var(--accent2); }
+
+/* notes panel */
+.notes-panel {
+  display: none;
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 14px;
+  padding-bottom: 4px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.notes-panel.open { display: block; }
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.notes-col-head {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.notes-col-head.neg { color: var(--red); }
+.notes-col-head.pos { color: var(--green); }
+
+.notes-body {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.notes-body:empty::before {
+  content: '—';
+  color: var(--muted);
+}
+
+/* ── Toolbar ────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 10px 22px;
+  border: 1px solid;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  color: var(--accent2);
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(66,153,225,0.3);
+}
+
+.btn-success {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+
+.btn-success:hover {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(56,161,105,0.3);
+}
+
+.btn-ghost {
+  color: var(--muted);
+  border-color: var(--dim);
+}
+
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* ── Status bar ─────────────────────────────────────────── */
+.status-bar {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-align: center;
+  margin-top: 14px;
+  height: 18px;
+  letter-spacing: 1px;
+  transition: color 0.3s;
+}
+
+.status-bar.ok    { color: var(--green); }
+.status-bar.err   { color: var(--red); }
+.status-bar.info  { color: var(--muted); }
+.status-bar.loading { color: var(--accent2); }
+
+/* ── Modal ──────────────────────────────────────────────── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(5,7,10,0.92);
+  z-index: 100;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 30px 16px;
+  backdrop-filter: blur(2px);
+}
+
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  width: 100%;
+  max-width: 680px;
+  margin: auto;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  animation: modalIn 0.25s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.97) translateY(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+.modal-close:hover { color: var(--text); }
+
+/* form */
+.field { margin-bottom: 18px; }
+
+.field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field-input, .field-textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 1px;
+}
+
+.field-input:focus, .field-textarea:focus {
+  border-color: var(--accent);
+}
+
+.field-textarea { resize: vertical; min-height: 70px; }
+
+.field-input[type=password] { letter-spacing: 3px; }
+
+/* streamer block */
+.s-block {
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 10px;
+  position: relative;
+  background: var(--bg);
+}
+
+.s-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.s-block-num {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--accent2);
+}
+
+.btn-remove {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border: 1px solid var(--red-dim);
+  background: none;
+  color: var(--red);
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.btn-remove:hover { background: var(--red); color: #fff; }
+
+.s-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* slider */
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 4px;
+  background: linear-gradient(90deg, var(--red-dim) 0%, var(--dim) 50%, var(--green-dim) 100%);
+  outline: none;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 20px;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(255,255,255,0.3);
+}
+
+.slider-num {
+  font-family: var(--mono);
+  font-size: 14px;
+  width: 28px;
+  text-align: center;
+}
+
+.slider-edge {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.notes-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-add-s {
+  width: 100%;
+  padding: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  border: 1px dashed var(--border2);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-add-s:hover { border-color: var(--accent); color: var(--accent2); }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+/* ── GitHub settings modal ──────────────────────────────── */
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.hint a { color: var(--accent2); }
+
+.separator {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+.info-box {
+  background: rgba(66,153,225,0.06);
+  border: 1px solid rgba(66,153,225,0.2);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+  header { padding: 20px 16px 16px; }
+  .logo-title { font-size: 22px; }
+  main { padding: 20px 12px 60px; }
+  .karma-row { grid-template-columns: 1fr 130px 1fr; padding: 10px 6px; }
+  .col-labels { grid-template-columns: 1fr 130px 1fr; }
+  .bar-wrap { max-width: 80px; }
+  .notes-grid { grid-template-columns: 1fr; }
+  .s-fields, .notes-fields { grid-template-columns: 1fr; }
+  .modal { padding: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-eyebrow">RANDOM GAME GAUNTLET</div>
+    <div class="logo-title">RGG <span>·</span> KARMA</div>
+  </div>
+  <div class="hero-chip">
+    <div class="hero-chip-label">ГЕРОЙ</div>
+    <div class="hero-chip-name" id="hero-name-display">—</div>
+  </div>
+</header>
+
+<main>
+  <div class="col-labels">
+    <div class="label-neg">НЕГАТИВ ←</div>
+    <div class="label-center">НИК / КАРМА</div>
+    <div class="label-pos">→ ПОЗИТИВ</div>
+  </div>
+
+  <div id="karma-list"></div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openEditor()">Редактировать</button>
+    <button class="btn btn-ghost" onclick="openGhSettings()">GitHub</button>
+  </div>
+
+  <div class="status-bar info" id="status">// данные загружаются локально</div>
+</main>
+
+<footer>RGG KARMA BOARD · нажми на стримера для деталей</footer>
+
+<!-- ══ EDITOR MODAL ═════════════════════════════════════════ -->
+<div class="overlay" id="editor-overlay" onclick="overlayClose(event,'editor-overlay')">
+<div class="modal">
+  <div class="modal-header">
+    <div class="modal-title">Редактор кармы</div>
+    <button class="modal-close" onclick="closeEditor()">✕</button>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Имя главного героя</label>
+    <input class="field-input" id="f-hero" placeholder="Твой ник...">
+  </div>
+
+  <div class="separator"></div>
+
+  <div id="s-list"></div>
+  <button class="btn-add-s" onclick="addStreamer()">+ добавить стримера</button>
+
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeEditor()">Отмена</button>
+    <button class="btn btn-success" onclick="saveAll()">Сохранить</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ GITHUB SETTINGS MODAL ════════════════════════════════ -->
+<div class="overlay" id="gh-overlay" onclick="overlayClose(event,'gh-overlay')">
+<div class="modal">
+  <div class="modal-header">
+    <div class="modal-title">Настройки GitHub</div>
+    <button class="modal-close" onclick="closeGhSettings()">✕</button>
+  </div>
+
+  <div class="info-box">
+    После настройки кнопка «Сохранить» будет автоматически записывать данные прямо в твой репозиторий на GitHub. Друзья сразу увидят изменения.
+  </div>
+
+  <div class="field">
+    <label class="field-label">GitHub Username</label>
+    <input class="field-input" id="gh-user" placeholder="твой-ник">
+  </div>
+
+  <div class="field">
+    <label class="field-label">Название репозитория</label>
+    <input class="field-input" id="gh-repo" placeholder="rgg-karma">
+  </div>
+
+  <div class="field">
+    <label class="field-label">Имя файла данных</label>
+    <input class="field-input" id="gh-file" placeholder="karma.json">
+    <div class="hint">Этот файл будет создан/перезаписан в корне репозитория.</div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Personal Access Token</label>
+    <input class="field-input" type="password" id="gh-token" placeholder="ghp_...">
+    <div class="hint">
+      Создай токен на <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a> 
+      с правами <b>repo</b>. Токен хранится только в твоём браузере.
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeGhSettings()">Отмена</button>
+    <button class="btn btn-primary" onclick="testGhConnection()">Проверить</button>
+    <button class="btn btn-success" onclick="saveGhSettings()">Сохранить</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────────────────
+const DEFAULTS = {
+  hero: 'ТВОЙ НИК',
+  streamers: [
+    { name: 'Streamer_A', karma: 4,  neg: '',  pos: 'Помог в финальной гонке, пропустил вперёд' },
+    { name: 'Streamer_B', karma: -3, neg: 'Заблокировал на клетке ивента намеренно', pos: '' },
+    { name: 'Streamer_C', karma: 1,  neg: '',  pos: 'Иногда подсказывает по играм' },
+    { name: 'Streamer_D', karma: -1, neg: 'Мелкая стычка из-за предмета', pos: '' },
+    { name: 'Streamer_E', karma: 5,  neg: '',  pos: 'Лучший союзник, всегда прикрывает' },
+    { name: 'Streamer_F', karma: 0,  neg: '',  pos: '' },
+  ]
+};
+
+let DATA = DEFAULTS;
+let GH = { user: '', repo: '', file: 'karma.json', token: '' };
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+(async function init() {
+  // Load GH settings
+  try { GH = JSON.parse(localStorage.getItem('rgg_gh') || 'null') || GH; } catch {}
+
+  // Try to load data from GitHub first, else localStorage
+  if (GH.user && GH.repo && GH.token) {
+    setStatus('Загрузка с GitHub...', 'loading');
+    const remote = await fetchFromGH();
+    if (remote) {
+      DATA = remote;
+      setStatus('Данные загружены с GitHub', 'ok');
+    } else {
+      loadLocal();
+    }
+  } else {
+    loadLocal();
+    setStatus('GitHub не настроен — данные локальные', 'info');
+  }
+  render();
+})();
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem('rgg_data');
+    if (raw) DATA = JSON.parse(raw);
+  } catch {}
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('hero-name-display').textContent = DATA.hero || '—';
+  const list = document.getElementById('karma-list');
+  list.innerHTML = '';
+
+  const sorted = [...DATA.streamers].sort((a, b) => b.karma - a.karma);
+  sorted.forEach((s, i) => {
+    const k = clamp(s.karma, -5, 5);
+    const cls = k > 0 ? 'pos' : k < 0 ? 'neg' : 'neu';
+    const negPct = k < 0 ? Math.abs(k) / 5 * 100 : 0;
+    const posPct = k > 0 ? k / 5 * 100 : 0;
+    const label = k > 0 ? '+' + k : k === 0 ? '0' : '' + k;
+    const hasNotes = s.neg || s.pos;
+
+    const row = document.createElement('div');
+    row.className = `karma-row ${cls}`;
+    row.style.animationDelay = (i * 40) + 'ms';
+    row.innerHTML = `
+      <div class="side neg">
+        <div class="bar-num neg">${k < 0 ? k : ''}</div>
+        <div class="bar-wrap">
+          <div class="bar-fill neg" style="width:${negPct}%"></div>
+        </div>
+      </div>
+
+      <div class="row-center">
+        <div class="row-name">${esc(s.name)}</div>
+        <div class="row-karma-badge ${cls}">${label}</div>
+        ${hasNotes ? `<div class="row-expand" onclick="toggleNotes(this)">▾ детали</div>` : ''}
+      </div>
+
+      <div class="side pos">
+        <div class="bar-wrap">
+          <div class="bar-fill pos" style="width:${posPct}%"></div>
+        </div>
+        <div class="bar-num pos">${k > 0 ? '+' + k : ''}</div>
+      </div>
+
+      ${hasNotes ? `
+      <div class="notes-panel">
+        <div class="notes-grid">
+          <div>
+            <div class="notes-col-head neg">▼ Негатив</div>
+            <div class="notes-body">${esc(s.neg || '')}</div>
+          </div>
+          <div>
+            <div class="notes-col-head pos">▲ Позитив</div>
+            <div class="notes-body">${esc(s.pos || '')}</div>
+          </div>
+        </div>
+      </div>` : ''}
+    `;
+    list.appendChild(row);
+  });
+}
+
+function toggleNotes(btn) {
+  const row = btn.closest('.karma-row');
+  const panel = row.querySelector('.notes-panel');
+  if (!panel) return;
+  panel.classList.toggle('open');
+  btn.textContent = panel.classList.contains('open') ? '▴ скрыть' : '▾ детали';
+}
+
+// ── EDITOR ─────────────────────────────────────────────────────────────────
+function openEditor() {
+  document.getElementById('f-hero').value = DATA.hero || '';
+  renderSList();
+  document.getElementById('editor-overlay').classList.add('open');
+}
+
+function closeEditor() {
+  document.getElementById('editor-overlay').classList.remove('open');
+}
+
+function renderSList() {
+  const c = document.getElementById('s-list');
+  c.innerHTML = '';
+  DATA.streamers.forEach((s, i) => {
+    const k = clamp(s.karma, -5, 5);
+    const d = document.createElement('div');
+    d.className = 's-block';
+    d.innerHTML = `
+      <div class="s-block-head">
+        <div class="s-block-num">СТРИМЕР ${i + 1}</div>
+        <button class="btn-remove" onclick="removeS(${i})">× удалить</button>
+      </div>
+      <div class="s-fields">
+        <div class="field" style="margin:0">
+          <label class="field-label">НИК</label>
+          <input class="field-input" id="sn-${i}" value="${esc(s.name)}" placeholder="Ник...">
+        </div>
+        <div class="field" style="margin:0">
+          <label class="field-label">КАРМА: <span id="sv-${i}" style="color:${k>0?'var(--green)':k<0?'var(--red)':'var(--muted)'}">${k>0?'+'+k:k}</span></label>
+          <div class="slider-wrap">
+            <span class="slider-edge">-5</span>
+            <input type="range" min="-5" max="5" step="1" value="${k}" id="sk-${i}"
+              oninput="sliderChange(${i},this.value)">
+            <span class="slider-edge">+5</span>
+          </div>
+        </div>
+      </div>
+      <div class="notes-fields">
+        <div>
+          <label class="field-label" style="color:var(--red)">▼ ЧТО ПЛОХОГО</label>
+          <textarea class="field-textarea" id="sneg-${i}" placeholder="Негативные события...">${esc(s.neg||'')}</textarea>
+        </div>
+        <div>
+          <label class="field-label" style="color:var(--green)">▲ ЧТО ХОРОШЕГО</label>
+          <textarea class="field-textarea" id="spos-${i}" placeholder="Позитивные события...">${esc(s.pos||'')}</textarea>
+        </div>
+      </div>
+    `;
+    c.appendChild(d);
+  });
+}
+
+function sliderChange(i, v) {
+  const n = parseInt(v);
+  const el = document.getElementById('sv-' + i);
+  el.textContent = n > 0 ? '+' + n : n;
+  el.style.color = n > 0 ? 'var(--green)' : n < 0 ? 'var(--red)' : 'var(--muted)';
+}
+
+function addStreamer() {
+  DATA.streamers.push({ name: 'Новый стример', karma: 0, neg: '', pos: '' });
+  renderSList();
+  document.querySelector('.modal').scrollTop = 99999;
+}
+
+function removeS(i) {
+  DATA.streamers.splice(i, 1);
+  renderSList();
+}
+
+async function saveAll() {
+  DATA.hero = document.getElementById('f-hero').value.trim() || 'СТРИМЕР';
+  DATA.streamers = DATA.streamers.map((_, i) => ({
+    name: (document.getElementById('sn-' + i)?.value || '').trim(),
+    karma: parseInt(document.getElementById('sk-' + i)?.value ?? 0),
+    neg: document.getElementById('sneg-' + i)?.value || '',
+    pos: document.getElementById('spos-' + i)?.value || '',
+  })).filter(s => s.name);
+
+  localStorage.setItem('rgg_data', JSON.stringify(DATA));
+  closeEditor();
+  render();
+
+  if (GH.user && GH.repo && GH.token) {
+    setStatus('Сохранение на GitHub...', 'loading');
+    const ok = await pushToGH();
+    setStatus(ok ? 'Сохранено на GitHub ✓' : 'Ошибка записи на GitHub', ok ? 'ok' : 'err');
+  } else {
+    setStatus('Сохранено локально (GitHub не настроен)', 'info');
+  }
+}
+
+// ── GITHUB API ─────────────────────────────────────────────────────────────
+async function fetchFromGH() {
+  try {
+    const r = await ghRequest('GET', null);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const text = atob(j.content.replace(/\n/g, ''));
+    return JSON.parse(text);
+  } catch { return null; }
+}
+
+async function pushToGH() {
+  try {
+    // get current SHA
+    let sha = null;
+    const get = await ghRequest('GET', null);
+    if (get.ok) { const j = await get.json(); sha = j.sha; }
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA, null, 2))));
+    const body = { message: 'Update karma data', content, ...(sha ? { sha } : {}) };
+    const put = await ghRequest('PUT', body);
+    return put.ok;
+  } catch { return false; }
+}
+
+function ghRequest(method, body) {
+  const url = `https://api.github.com/repos/${GH.user}/${GH.repo}/contents/${GH.file}`;
+  return fetch(url, {
+    method,
+    headers: {
+      Authorization: `token ${GH.token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/vnd.github.v3+json',
+    },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+}
+
+// ── GH SETTINGS ────────────────────────────────────────────────────────────
+function openGhSettings() {
+  document.getElementById('gh-user').value = GH.user;
+  document.getElementById('gh-repo').value = GH.repo;
+  document.getElementById('gh-file').value = GH.file;
+  document.getElementById('gh-token').value = GH.token;
+  document.getElementById('gh-overlay').classList.add('open');
+}
+
+function closeGhSettings() {
+  document.getElementById('gh-overlay').classList.remove('open');
+}
+
+function saveGhSettings() {
+  GH.user  = document.getElementById('gh-user').value.trim();
+  GH.repo  = document.getElementById('gh-repo').value.trim();
+  GH.file  = document.getElementById('gh-file').value.trim() || 'karma.json';
+  GH.token = document.getElementById('gh-token').value.trim();
+  localStorage.setItem('rgg_gh', JSON.stringify(GH));
+  closeGhSettings();
+  setStatus('Настройки GitHub сохранены', 'ok');
+}
+
+async function testGhConnection() {
+  const user  = document.getElementById('gh-user').value.trim();
+  const repo  = document.getElementById('gh-repo').value.trim();
+  const token = document.getElementById('gh-token').value.trim();
+  if (!user || !repo || !token) { setStatus('Заполни все поля', 'err'); return; }
+
+  setStatus('Проверка подключения...', 'loading');
+  try {
+    const r = await fetch(`https://api.github.com/repos/${user}/${repo}`, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if (r.ok) {
+      setStatus(`Подключено: ${user}/${repo} ✓`, 'ok');
+    } else {
+      setStatus(`Ошибка ${r.status}: репозиторий не найден или нет прав`, 'err');
+    }
+  } catch { setStatus('Сетевая ошибка', 'err'); }
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setStatus(msg, type = 'info') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-bar ' + type;
+}
+
+function overlayClose(e, id) {
+  if (e.target === document.getElementById(id)) {
+    document.getElementById(id).classList.remove('open');
+  }
+}
+</script>
+</body>
+</html>
