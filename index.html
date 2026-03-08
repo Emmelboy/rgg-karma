@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta name="app-version" content="5">
 <title>RGG · Karma Board</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
@@ -853,6 +851,21 @@ footer {
   .btn { font-size: 10px; padding: 8px 14px; }
 }
 </style>
+<script>
+// Принудительная проверка версии — автообновление для всех посетителей
+(function() {
+  const VERSION = '5';
+  const stored = sessionStorage.getItem('rgg_version');
+  if (stored !== VERSION) {
+    sessionStorage.setItem('rgg_version', VERSION);
+    if (stored !== null) {
+      // Была старая версия — перезагружаем с cache-bust
+      const url = location.href.split('?')[0] + '?v=' + VERSION;
+      location.replace(url);
+    }
+  }
+})();
+</script>
 </head>
 <body>
 
