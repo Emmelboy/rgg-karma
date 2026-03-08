@@ -100,12 +100,12 @@
     {
       "name": "TorNis",
       "karma": 0,
-      "neg": "",
+      "neg": "Только всеобщее взаимодействие\n(пропеллер)",
       "pos": ""
     },
     {
       "name": "VASABILISA",
-      "karma": 0,
+      "karma": 5,
       "neg": "",
       "pos": ""
     },
