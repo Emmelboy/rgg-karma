@@ -129,7 +129,7 @@ main {
 /* ── Column labels ──────────────────────────────────────── */
 .col-labels {
   display: grid;
-  grid-template-columns: 1fr 180px 1fr;
+  grid-template-columns: 1fr 220px 1fr;
   gap: 8px;
   margin-bottom: 10px;
   padding: 0 2px;
@@ -164,18 +164,18 @@ main {
 #karma-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .karma-row {
   display: grid;
-  grid-template-columns: 1fr 180px 1fr;
+  grid-template-columns: 1fr 220px 1fr;
   gap: 8px;
   align-items: center;
   background: var(--card);
   border: 1px solid var(--border);
   border-left: 3px solid transparent;
-  padding: 12px 10px;
+  padding: 16px 14px;
   transition: border-color 0.2s, background 0.2s;
   cursor: default;
   animation: fadeIn 0.3s ease both;
@@ -207,7 +207,7 @@ main {
 .bar-wrap {
   flex: 1;
   max-width: 130px;
-  height: 8px;
+  height: 12px;
   background: var(--dim);
   border-radius: 1px;
   overflow: hidden;
@@ -233,8 +233,8 @@ main {
 
 .bar-num {
   font-family: var(--mono);
-  font-size: 12px;
-  width: 22px;
+  font-size: 16px;
+  width: 28px;
   flex-shrink: 0;
 }
 
@@ -248,8 +248,8 @@ main {
 }
 
 .row-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   color: #e2e8f0;
   letter-spacing: 0.5px;
   white-space: nowrap;
@@ -259,8 +259,9 @@ main {
 
 .row-karma-badge {
   font-family: var(--mono);
-  font-size: 11px;
-  margin-top: 2px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 4px;
 }
 
 .row-karma-badge.pos { color: var(--green); }
@@ -646,8 +647,8 @@ footer {
   header { padding: 20px 16px 16px; }
   .logo-title { font-size: 22px; }
   main { padding: 20px 12px 60px; }
-  .karma-row { grid-template-columns: 1fr 130px 1fr; padding: 10px 6px; }
-  .col-labels { grid-template-columns: 1fr 130px 1fr; }
+  .karma-row { grid-template-columns: 1fr 150px 1fr; padding: 12px 6px; }
+  .col-labels { grid-template-columns: 1fr 150px 1fr; }
   .bar-wrap { max-width: 80px; }
   .notes-grid { grid-template-columns: 1fr; }
   .s-fields, .notes-fields { grid-template-columns: 1fr; }
