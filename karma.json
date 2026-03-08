@@ -20,22 +20,22 @@
       "pos": ""
     },
     {
-      "name": "Streamer_D",
-      "karma": -1,
-      "neg": "Мелкая стычка из-за предмета",
-      "pos": ""
-    },
-    {
-      "name": "Streamer_E",
-      "karma": 5,
-      "neg": "",
-      "pos": "Лучший союзник, всегда прикрывает"
-    },
-    {
-      "name": "Streamer_F",
+      "name": "Dailyhardcore",
       "karma": 0,
       "neg": "",
       "pos": ""
+    },
+    {
+      "name": "Eirenarin",
+      "karma": 0,
+      "neg": "",
+      "pos": ""
+    },
+    {
+      "name": "Irvincheg",
+      "karma": 5,
+      "neg": "",
+      "pos": "Союзник"
     }
   ]
 }
