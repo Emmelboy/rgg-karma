@@ -160,6 +160,66 @@ main {
   opacity: 0.7;
 }
 
+/* ── Search ─────────────────────────────────────────────── */
+.search-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 10px 40px 10px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  letter-spacing: 1px;
+}
+
+.search-input:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 12px rgba(66,153,225,0.15);
+}
+
+.search-input::placeholder { color: var(--muted); }
+
+.search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  display: none;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.search-clear:hover { color: var(--text); }
+
+.search-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  min-height: 14px;
+}
+
+.karma-row.hidden { display: none; }
+
+/* highlight match */
+.hl { color: var(--accent2); border-bottom: 1px solid var(--accent); }
+
 /* ── Karma rows ─────────────────────────────────────────── */
 #karma-list {
   display: flex;
@@ -670,6 +730,12 @@ footer {
 </header>
 
 <main>
+  <div class="search-wrap">
+    <input class="search-input" id="search-input" placeholder="Поиск по нику..." oninput="onSearch(this.value)" autocomplete="off" spellcheck="false">
+    <button class="search-clear" id="search-clear" onclick="clearSearch()" title="Очистить">✕</button>
+  </div>
+  <div class="search-count" id="search-count"></div>
+
   <div class="col-labels">
     <div class="label-neg">НЕГАТИВ ←</div>
     <div class="label-center">НИК / КАРМА</div>
@@ -800,6 +866,7 @@ const PUBLIC_FILE   = 'karma.json';
     DATA = remote;
     setStatus('Данные актуальны ✓', 'ok');
     render();
+    reapplySearch();
     return;
   }
 
@@ -807,6 +874,7 @@ const PUBLIC_FILE   = 'karma.json';
   loadLocal();
   setStatus('Не удалось загрузить данные', 'info');
   render();
+  reapplySearch();
 })();
 
 function loadLocal() {
@@ -817,6 +885,64 @@ function loadLocal() {
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────────────
+// ── SEARCH ────────────────────────────────────────────────────────────────
+function onSearch(val) {
+  const q = val.trim().toLowerCase();
+  const rows = document.querySelectorAll('.karma-row');
+  const clearBtn = document.getElementById('search-clear');
+  const countEl = document.getElementById('search-count');
+
+  clearBtn.style.display = q ? 'block' : 'none';
+
+  let visible = 0;
+  rows.forEach(row => {
+    const nameEl = row.querySelector('.row-name');
+    if (!nameEl) return;
+    const name = nameEl.textContent.toLowerCase();
+
+    if (!q || name.includes(q)) {
+      row.classList.remove('hidden');
+      visible++;
+      // highlight match
+      if (q) {
+        const orig = nameEl.textContent;
+        const idx = name.indexOf(q);
+        nameEl.innerHTML =
+          esc(orig.slice(0, idx)) +
+          '<span class="hl">' + esc(orig.slice(idx, idx + q.length)) + '</span>' +
+          esc(orig.slice(idx + q.length));
+      } else {
+        nameEl.textContent = nameEl.textContent;
+      }
+    } else {
+      row.classList.add('hidden');
+    }
+  });
+
+  if (q) {
+    countEl.textContent = visible === 0 ? 'ничего не найдено' : `найдено: ${visible}`;
+  } else {
+    countEl.textContent = '';
+    // restore names without highlight
+    rows.forEach(row => {
+      const nameEl = row.querySelector('.row-name');
+      if (nameEl) nameEl.innerHTML = nameEl.textContent;
+    });
+  }
+}
+
+function clearSearch() {
+  const input = document.getElementById('search-input');
+  input.value = '';
+  onSearch('');
+  input.focus();
+}
+
+function reapplySearch() {
+  const input = document.getElementById('search-input');
+  if (input && input.value.trim()) onSearch(input.value);
+}
+
 function render() {
   document.getElementById('hero-name-display').textContent = DATA.hero || '—';
   const list = document.getElementById('karma-list');
