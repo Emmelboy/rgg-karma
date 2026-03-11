@@ -1184,7 +1184,7 @@ function checkPassword() {
   const errEl = document.getElementById('lock-error');
   const val   = input.value;
 
-  if (simpleHash(val) === HARDCODED_HASH) {
+  if (val === '41n41r1n') {
     sessionStorage.setItem(SESSION_KEY, 'yes');
     unlockPage();
   } else {
