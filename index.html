@@ -1152,6 +1152,56 @@ const PUBLIC_REPO   = 'rgg-karma';
 const PUBLIC_BRANCH = 'main';
 const PUBLIC_FILE   = 'karma.json';
 
+// ── PASSWORD ──────────────────────────────────────────────────────────────
+
+
+// Simple hash function (not crypto, just obfuscation)
+function simpleHash(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(16);
+}
+
+const PASS_HASH_KEY  = 'rgg_pass_hash';
+const SESSION_KEY    = 'rgg_unlocked';
+const HARDCODED_HASH = 'bc828bb1'; // пароль зашит в код
+
+function initLock() {
+  // Проверяем сессию — не просить пароль повторно в той же вкладке
+  if (sessionStorage.getItem(SESSION_KEY) === 'yes') {
+    unlockPage();
+    return;
+  }
+  document.getElementById('lock-screen').classList.add('show');
+  setTimeout(() => document.getElementById('lock-input').focus(), 100);
+}
+
+function checkPassword() {
+  const input = document.getElementById('lock-input');
+  const errEl = document.getElementById('lock-error');
+  const val   = input.value;
+
+  if (simpleHash(val) === HARDCODED_HASH) {
+    sessionStorage.setItem(SESSION_KEY, 'yes');
+    unlockPage();
+  } else {
+    input.classList.add('error');
+    errEl.textContent = 'Неверный пароль';
+    input.value = '';
+    setTimeout(() => { input.classList.remove('error'); errEl.textContent = ''; }, 1500);
+  }
+}
+
+function unlockPage() {
+  document.getElementById('lock-screen').classList.remove('show');
+}
+
+
+
+
 // ── INIT ───────────────────────────────────────────────────────────────────
 (async function init() {
   // Password check first
@@ -1569,55 +1619,6 @@ async function testGhConnection() {
     }
   } catch { setStatus('Сетевая ошибка', 'err'); }
 }
-
-// ── PASSWORD ──────────────────────────────────────────────────────────────
-
-
-// Simple hash function (not crypto, just obfuscation)
-function simpleHash(str) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(16);
-}
-
-const PASS_HASH_KEY  = 'rgg_pass_hash';
-const SESSION_KEY    = 'rgg_unlocked';
-const HARDCODED_HASH = 'bc828bb1'; // пароль зашит в код
-
-function initLock() {
-  // Проверяем сессию — не просить пароль повторно в той же вкладке
-  if (sessionStorage.getItem(SESSION_KEY) === 'yes') {
-    unlockPage();
-    return;
-  }
-  document.getElementById('lock-screen').classList.add('show');
-  setTimeout(() => document.getElementById('lock-input').focus(), 100);
-}
-
-function checkPassword() {
-  const input = document.getElementById('lock-input');
-  const errEl = document.getElementById('lock-error');
-  const val   = input.value;
-
-  if (simpleHash(val) === HARDCODED_HASH) {
-    sessionStorage.setItem(SESSION_KEY, 'yes');
-    unlockPage();
-  } else {
-    input.classList.add('error');
-    errEl.textContent = 'Неверный пароль';
-    input.value = '';
-    setTimeout(() => { input.classList.remove('error'); errEl.textContent = ''; }, 1500);
-  }
-}
-
-function unlockPage() {
-  document.getElementById('lock-screen').classList.remove('show');
-}
-
-
 
 // ── INVENTORY WATCHER ─────────────────────────────────────────────────────
 const INV_URL      = 'https://rgg.land/inventories';
