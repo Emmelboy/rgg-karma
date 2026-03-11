@@ -1571,8 +1571,7 @@ async function testGhConnection() {
 }
 
 // ── PASSWORD ──────────────────────────────────────────────────────────────
-const PASS_HASH_KEY = 'rgg_pass_hash';
-const SESSION_KEY   = 'rgg_unlocked';
+
 
 // Simple hash function (not crypto, just obfuscation)
 function simpleHash(str) {
@@ -1584,6 +1583,8 @@ function simpleHash(str) {
   return h.toString(16);
 }
 
+const PASS_HASH_KEY  = 'rgg_pass_hash';
+const SESSION_KEY    = 'rgg_unlocked';
 const HARDCODED_HASH = 'bc828bb1'; // пароль зашит в код
 
 function initLock() {
