@@ -1203,10 +1203,10 @@ function unlockPage() {
 
 
 // ── INIT ───────────────────────────────────────────────────────────────────
-(async function init() {
-  // Password check first
-  initLock();
+// Run password check as soon as DOM is ready
+document.addEventListener("DOMContentLoaded", initLock);
 
+(async function init() {
   // Load GH settings
   try { GH = JSON.parse(localStorage.getItem('rgg_gh') || 'null') || GH; } catch {}
 
