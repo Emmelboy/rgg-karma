@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="app-version" content="4">
+<meta name="app-version" content="5">
 <title>RGG · Karma Board</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
@@ -850,6 +850,146 @@ footer {
   .toolbar { gap: 8px; }
   .btn { font-size: 10px; padding: 8px 14px; }
 }
+
+/* ── Password lock ───────────────────────────────────────── */
+.lock-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lock-screen.show { display: flex; }
+
+.lock-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.lock-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+}
+
+.lock-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.lock-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+.lock-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 18px;
+  padding: 10px 14px;
+  outline: none;
+  text-align: center;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.lock-input:focus { border-color: var(--accent); }
+.lock-input.error { border-color: var(--red); animation: shake 0.3s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.lock-btn {
+  width: 100%;
+  padding: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  border: 1px solid var(--accent);
+  background: none;
+  color: var(--accent2);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lock-btn:hover { background: var(--accent); color: #fff; }
+
+.lock-error {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  min-height: 16px;
+  letter-spacing: 1px;
+}
+
+/* ── Inventory notification badge ────────────────────────── */
+.inv-badge {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  max-width: 300px;
+  z-index: 500;
+  animation: slideUp 0.3s ease;
+  display: none;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.inv-badge.show { display: block; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.inv-badge-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent2);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.inv-badge-body {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.inv-badge-close {
+  position: absolute;
+  top: 6px; right: 8px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+}
 </style>
 <script>
 // Принудительная проверка версии — автообновление для всех посетителей
@@ -1014,6 +1154,9 @@ const PUBLIC_FILE   = 'karma.json';
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 (async function init() {
+  // Password check first
+  initLock();
+
   // Load GH settings
   try { GH = JSON.parse(localStorage.getItem('rgg_gh') || 'null') || GH; } catch {}
 
@@ -1025,6 +1168,7 @@ const PUBLIC_FILE   = 'karma.json';
     setStatus('Данные актуальны ✓', 'ok');
     render();
     reapplySearch();
+    startInvWatcher();
     return;
   }
 
@@ -1033,6 +1177,9 @@ const PUBLIC_FILE   = 'karma.json';
   setStatus('Не удалось загрузить данные', 'info');
   render();
   reapplySearch();
+
+  // Start inventory watcher
+  startInvWatcher();
 })();
 
 function loadLocal() {
@@ -1423,6 +1570,157 @@ async function testGhConnection() {
   } catch { setStatus('Сетевая ошибка', 'err'); }
 }
 
+// ── PASSWORD ──────────────────────────────────────────────────────────────
+const PASS_HASH_KEY = 'rgg_pass_hash';
+const SESSION_KEY   = 'rgg_unlocked';
+
+// Simple hash function (not crypto, just obfuscation)
+function simpleHash(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(16);
+}
+
+const HARDCODED_HASH = 'bc828bb1'; // пароль зашит в код
+
+function initLock() {
+  // Проверяем сессию — не просить пароль повторно в той же вкладке
+  if (sessionStorage.getItem(SESSION_KEY) === 'yes') {
+    unlockPage();
+    return;
+  }
+  document.getElementById('lock-screen').classList.add('show');
+  setTimeout(() => document.getElementById('lock-input').focus(), 100);
+}
+
+function checkPassword() {
+  const input = document.getElementById('lock-input');
+  const errEl = document.getElementById('lock-error');
+  const val   = input.value;
+
+  if (simpleHash(val) === HARDCODED_HASH) {
+    sessionStorage.setItem(SESSION_KEY, 'yes');
+    unlockPage();
+  } else {
+    input.classList.add('error');
+    errEl.textContent = 'Неверный пароль';
+    input.value = '';
+    setTimeout(() => { input.classList.remove('error'); errEl.textContent = ''; }, 1500);
+  }
+}
+
+function unlockPage() {
+  document.getElementById('lock-screen').classList.remove('show');
+}
+
+
+
+// ── INVENTORY WATCHER ─────────────────────────────────────────────────────
+const INV_URL      = 'https://rgg.land/inventories';
+const INV_KEY      = 'rgg_inv_state';
+const INV_INTERVAL = 60000; // 60 секунд
+let invState       = {};
+let invChangeCount = 0;
+const BASE_TITLE   = document.title;
+let titleBlink     = null;
+
+async function fetchInventories() {
+  try {
+    const r = await fetch(INV_URL + '?t=' + Date.now());
+    if (!r.ok) return null;
+    const html = await r.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const table = doc.querySelector('table');
+    if (!table) return null;
+
+    const headers = [...table.querySelectorAll('th')].map(th => th.textContent.trim());
+    const rows = {};
+    table.querySelectorAll('tr:not(:first-child)').forEach(tr => {
+      const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+      if (!cells.length) return;
+      const player = cells[0];
+      const data = {};
+      headers.slice(1).forEach((h, i) => { data[h] = cells[i + 1] || ''; });
+      rows[player] = data;
+    });
+    return rows;
+  } catch { return null; }
+}
+
+function compareInv(oldData, newData) {
+  const changes = [];
+  for (const [player, newVals] of Object.entries(newData)) {
+    const oldVals = oldData[player];
+    if (!oldVals) continue;
+    for (const [field, newVal] of Object.entries(newVals)) {
+      if (oldVals[field] !== undefined && oldVals[field] !== newVal) {
+        const oldN = parseInt(oldVals[field]);
+        const newN = parseInt(newVal);
+        const diff = !isNaN(oldN) && !isNaN(newN) ? (newN - oldN > 0 ? `+${newN-oldN}` : `${newN-oldN}`) : '';
+        changes.push({ player, field, from: oldVals[field], to: newVal, diff });
+      }
+    }
+  }
+  return changes;
+}
+
+function showInvChanges(changes) {
+  invChangeCount += changes.length;
+
+  // Title notification
+  if (titleBlink) clearInterval(titleBlink);
+  let blink = false;
+  titleBlink = setInterval(() => {
+    document.title = blink
+      ? `(${invChangeCount}) 🔴 ${BASE_TITLE}`
+      : BASE_TITLE;
+    blink = !blink;
+  }, 1000);
+
+  // Badge
+  const byPlayer = {};
+  changes.forEach(c => {
+    (byPlayer[c.player] = byPlayer[c.player] || []).push(c);
+  });
+
+  const lines = Object.entries(byPlayer).map(([p, cs]) => {
+    const details = cs.map(c => `${c.field}: ${c.from}→${c.to}${c.diff ? ` (${c.diff})` : ''}`).join(', ');
+    return `<b>${p}:</b> ${details}`;
+  });
+
+  document.getElementById('inv-badge-body').innerHTML = lines.join('<br>');
+  document.getElementById('inv-badge').classList.add('show');
+}
+
+function closeBadge() {
+  document.getElementById('inv-badge').classList.remove('show');
+  invChangeCount = 0;
+  if (titleBlink) clearInterval(titleBlink);
+  document.title = BASE_TITLE;
+}
+
+async function invTick() {
+  const newData = await fetchInventories();
+  if (!newData) return;
+
+  const saved = localStorage.getItem(INV_KEY);
+  if (saved) {
+    const oldData = JSON.parse(saved);
+    const changes = compareInv(oldData, newData);
+    if (changes.length) showInvChanges(changes);
+  }
+  localStorage.setItem(INV_KEY, JSON.stringify(newData));
+}
+
+function startInvWatcher() {
+  invTick();
+  setInterval(invTick, INV_INTERVAL);
+}
+
 // ── UTILS ──────────────────────────────────────────────────────────────────
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -1443,5 +1741,27 @@ function overlayClose(e, id) {
   }
 }
 </script>
+<!-- ── LOCK SCREEN ─────────────────────────────────────────── -->
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">RGG KARMA</div>
+    <div class="lock-sub">ВВЕДИ ПАРОЛЬ</div>
+    <input class="lock-input" id="lock-input" type="password"
+      placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkPassword()"
+      autocomplete="off">
+    <div class="lock-error" id="lock-error"></div>
+    <button class="lock-btn" onclick="checkPassword()">ВОЙТИ</button>
+  </div>
+</div>
+
+<!-- ── INVENTORY BADGE ──────────────────────────────────── -->
+<div class="inv-badge" id="inv-badge">
+  <button class="inv-badge-close" onclick="closeBadge()">✕</button>
+  <div class="inv-badge-title">🎮 ИЗМЕНЕНИЯ В ИНВЕНТАРЕ</div>
+  <div class="inv-badge-body" id="inv-badge-body"></div>
+</div>
+
 </body>
 </html>
