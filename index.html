@@ -1165,9 +1165,9 @@ function simpleHash(str) {
   return h.toString(16);
 }
 
-const PASS_HASH_KEY  = 'rgg_pass_hash';
-const SESSION_KEY    = 'rgg_unlocked';
-const HARDCODED_HASH = 'bc828bb1'; // пароль зашит в код
+var PASS_HASH_KEY  = 'rgg_pass_hash';
+var SESSION_KEY    = 'rgg_unlocked';
+var HARDCODED_HASH = 'bc828bb1'; // пароль зашит в код
 
 function initLock() {
   // Проверяем сессию — не просить пароль повторно в той же вкладке
